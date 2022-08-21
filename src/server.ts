@@ -15,7 +15,7 @@ interface IUser {
 const user: IUser = {
 	firstName: "Hendrick",
 	lastName: "Denzmann",
-	accessGroups: ['loggedInUser', 'member']
+	accessGroups: ['loggedInUsers', 'members']
 };
 
 app.get('/', (req: express.Request, res: express.Response) => {
