@@ -19,7 +19,7 @@ const user: IUser = {
 };
 
 app.get('/', (req: express.Request, res: express.Response) => {
-	res.addTrailers
+	res.send(user);
 });
 
 app.listen(PORT, () => {
