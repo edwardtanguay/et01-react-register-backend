@@ -15,6 +15,10 @@ const user: IUser = {
 	accessGroups: ['loggedInUser', 'member']
 };
 
+app.get('/', (req: express.Request, res: express.Response) => {
+	res.send(user);
+});
+
 app.listen(PORT, () => {
 	console.log(`listening on port http://localhost:${PORT}`);
 });
