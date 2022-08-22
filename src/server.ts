@@ -1,17 +1,11 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import { IUser } from './interfaces';
+import { user } from './models.js';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3049;
-
-const user: IUser = {
-	firstName: "Hendrick",
-	lastName: "Denzmann-changed",
-	accessGroups: ['loggedInUsers', 'members']
-};
 
 app.get('/', (req: express.Request, res: express.Response) => {
 	res.send(user);
