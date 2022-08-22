@@ -31,25 +31,54 @@ app.get('/', (req: express.Request, res: express.Response) => {
 	res.send(users);
 });
 
-app.post('/login', (req, res) => {
-	const username = req.body.username;
-	const user = users.find((user) => user.username === username);
+const loginSecondsMax = 10;
+
+const logAnonymousUserIn = (req: express.Request, res: express.Response) => {
+	const user = users.find((user) => user.username === 'anonymousUser');
 	if (user) {
 		req.session.user = user;
-		req.session.cookie.expires = new Date(Date.now() + 10000); // 10 seconds
+		req.session.cookie.expires = new Date(Date.now() + loginSecondsMax * 1000);
 		req.session.save();
-		res.send(`User logged in: ${JSON.stringify(user)}`);
+		res.send({
+			"currentUser": user
+		});
 	} else {
 		res.status(500).send('bad login');
 	}
+}
+
+const logUserIn = (username: string, req: express.Request, res: express.Response) => {
+	let user = users.find((user) => user.username === username);
+	if (user) {
+		req.session.user = user;
+		req.session.cookie.expires = new Date(Date.now() + loginSecondsMax * 1000);
+		req.session.save();
+		res.send({
+			"currentUser": user
+		});
+	} else {
+		logAnonymousUserIn(req, res);
+	}
+}
+
+app.post('/login', (req: express.Request, res: express.Response) => {
+	const username = req.body.username;
+	logUserIn(username, req, res);
 });
 
-app.get('/current-user', (req, res) => {
-	if (req.session.user) {
-		res.send(req.session.user);
+app.get('/current-user', (req: express.Request, res: express.Response) => {
+	const user = req.session.user;
+	if (user) {
+		res.send({
+			"currentUser": user
+		});
 	} else {
-		res.send('no user logged in');
+		logAnonymousUserIn(req, res);
 	}
+});
+
+app.get('/logout', (req: express.Request, res: express.Response) => {
+	logAnonymousUserIn(req, res);
 });
 
 app.listen(PORT, () => {

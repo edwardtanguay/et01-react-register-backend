@@ -19,7 +19,7 @@ content-type: application/json
     "username": "an"
 }
 
-### GET LOGGED IN USER GET 
+### GET CURRENT USER
 {{url}}/current-user
 
 ### LOGOUT GET 
