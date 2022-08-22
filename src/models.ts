@@ -1,7 +1,16 @@
 import { IUser } from './interfaces.js';
 
-export const user: IUser = {
-	firstName: "Hendrick",
-	lastName: "Denzmann - test2",
-	accessGroups: ['loggedInUsers', 'members']
-};
+export const getUsers = (): IUser[] => {
+	return [
+		{
+			firstName: "Anonymous",
+			lastName: "User",
+			accessGroups: ['loggedOutUsers']
+		},
+		{
+			firstName: "Hendrick",
+			lastName: "Denzmann",
+			accessGroups: ['loggedInUsers', 'members']
+		}
+	];
+}
