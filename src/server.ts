@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import { getUsers } from './models.js';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
 
 declare module 'express-session' {
 	export interface SessionData {
@@ -26,6 +27,7 @@ app.use(
 
 app.use(cookieParser());
 app.use(express.json());
+app.use(cors());
 
 app.get('/', (req: express.Request, res: express.Response) => {
 	res.send(users);
