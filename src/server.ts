@@ -17,17 +17,38 @@ const app = express();
 const PORT = process.env.PORT || 3049;
 const users = getUsers();
 
+
+app.use(express.json());
+app.use(
+	cors({
+		origin: "http://localhost:5173",
+		methods: ['POST', 'PUT', 'GET', 'OPTIONS', 'HEAD'],
+		credentials: true
+	})
+);
+// app.set('trust proxy', 1)
+
+app.use(cookieParser());
+
 app.use(
 	session({
 		resave: true,
 		saveUninitialized: true,
-		secret: 'tempsecret'
+		secret: 'tempsecret',
+		cookie: {
+			httpOnly: true,
+			sameSite: 'lax',
+			secure: false
+		}
 	})
 );
 
-app.use(cookieParser());
-app.use(express.json());
-app.use(cors());
+app.all('/', function (req, res, next) {
+	res.header("Access-Control-Allow-Origin", "http://localhost:5173");
+	res.header("Access-Control-Allow-Headers", "X-Requested-With");
+	next();
+});
+
 
 app.get('/', (req: express.Request, res: express.Response) => {
 	res.send(users);
