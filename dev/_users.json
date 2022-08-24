@@ -1,0 +1,34 @@
+[
+  {
+	"id": 1,
+    "username": "anonymousUser",
+	"hash": "$2b$10$UTJoAXM.H.eobykdjdsEp.S.9e3r6yVZK8qh.Xoub1tjV2wETo57G",
+    "firstName": "Anonymous",
+    "lastName": "User",
+    "accessGroups": [
+      "loggedOutUsers"
+    ]
+  },
+  {
+	"id": 2,
+    "username": "hd",
+    "firstName": "Hendrick",
+    "lastName": "Denzmann",
+	"hash": "$2b$10$vWZU3kzsAQmEbOXepkhLD.UruF3YHvobF3fUFt9phUGyEPmqmSQsa",
+    "accessGroups": [
+      "loggedInUsers",
+      "members"
+    ]
+  },
+  {
+	"id": 3,
+    "username": "an",
+    "firstName": "Andrea",
+    "lastName": "Netzelbach",
+	"hash": "$2b$10$rotowrYKM2NbJTR8JIcv3.7a9Pev7FCcOJsM1Bh1PbvXsWwYAZx8C",
+    "accessGroups": [
+      "loggedInUsers",
+      "members"
+    ]
+  }
+]
