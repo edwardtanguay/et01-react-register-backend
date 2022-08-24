@@ -33,7 +33,7 @@ app.use(
 	session({
 		resave: true,
 		saveUninitialized: true,
-		secret: 'tempsecret',
+		secret: process.env.SESSION_SECRET,
 		cookie: {
 			httpOnly: true,
 			sameSite: 'lax',
@@ -50,7 +50,7 @@ app.all('/', function (req, res, next) {
 
 
 app.get('/', (req: express.Request, res: express.Response) => {
-	res.send(users);
+	// res.send(users);
 	res.send(`***${process.env.NODE_ENV}***`);
 });
 
