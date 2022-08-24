@@ -14,15 +14,13 @@ declare module 'express-session' {
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3049;
+const PORT = process.env.PORT || 3045;
 const users = getUsers();
-
-console.log(`***************NODE_ENV=${process.env.NODE_ENV}********************`);
 
 app.use(express.json());
 app.use(
 	cors({
-		origin: "http://localhost:5173",
+		origin: process.env.FRONTEND_BASE_URL,
 		methods: ['POST', 'PUT', 'GET', 'OPTIONS', 'HEAD'],
 		credentials: true
 	})
