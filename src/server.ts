@@ -36,8 +36,8 @@ app.use(
 		secret: process.env.SESSION_SECRET,
 		cookie: {
 			httpOnly: true,
-			sameSite: 'lax',
-			secure: false
+			sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+			secure: process.env.NODE_ENV === "production"
 		}
 	})
 );
@@ -50,7 +50,6 @@ app.all('/', function (req, res, next) {
 
 
 app.get('/', (req: express.Request, res: express.Response) => {
-	// res.send(users);
 	res.send(`***${process.env.NODE_ENV}***`);
 });
 
