@@ -17,6 +17,7 @@ const app = express();
 const PORT = process.env.PORT || 3049;
 const users = getUsers();
 
+console.log(`***************NODE_ENV=${process.env.NODE_ENV}********************`);
 
 app.use(express.json());
 app.use(
@@ -26,7 +27,7 @@ app.use(
 		credentials: true
 	})
 );
-// app.set('trust proxy', 1)
+app.set('trust proxy', 1)
 
 app.use(cookieParser());
 
@@ -52,6 +53,7 @@ app.all('/', function (req, res, next) {
 
 app.get('/', (req: express.Request, res: express.Response) => {
 	res.send(users);
+	res.send(`***${process.env.NODE_ENV}***`);
 });
 
 const loginSecondsMax = 10;
