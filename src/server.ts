@@ -1,9 +1,13 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import { getUsers } from './models.js';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
+import mongoose from 'mongoose';
+import { User } from './models/User.js';
+
+dotenv.config();
+mongoose.connect(process.env.MONGODB_URI);
 
 declare module 'express-session' {
 	export interface SessionData {
@@ -11,11 +15,8 @@ declare module 'express-session' {
 	}
 }
 
-dotenv.config();
-
 const app = express();
 const PORT = process.env.PORT || 3045;
-const users = getUsers();
 
 app.use(express.json());
 app.use(
@@ -55,8 +56,8 @@ app.get('/', (req: express.Request, res: express.Response) => {
 
 const loginSecondsMax = 10;
 
-const logAnonymousUserIn = (req: express.Request, res: express.Response) => {
-	const user = users.find((user) => user.username === 'anonymousUser');
+const logAnonymousUserIn = async (req: express.Request, res: express.Response) => {
+	const user = await User.findOne({ username: 'anonymousUser' });
 	if (user) {
 		req.session.user = user;
 		req.session.cookie.expires = new Date(Date.now() + loginSecondsMax * 1000);
@@ -69,8 +70,8 @@ const logAnonymousUserIn = (req: express.Request, res: express.Response) => {
 	}
 }
 
-const logUserIn = (username: string, req: express.Request, res: express.Response) => {
-	let user = users.find((user) => user.username === username);
+const logUserIn = async (username: string, req: express.Request, res: express.Response) => {
+	const user = await User.findOne({ username });
 	if (user) {
 		req.session.user = user;
 		req.session.cookie.expires = new Date(Date.now() + loginSecondsMax * 1000);

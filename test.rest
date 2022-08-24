@@ -1,4 +1,4 @@
-@url = http://localhost:3049
+@url = http://localhost:3045
 
 ### BASE ROUTE
 {{url}}
