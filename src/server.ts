@@ -4,6 +4,7 @@ import session from 'express-session';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
 import { User } from './models/User.js';
 
 dotenv.config();
@@ -70,15 +71,23 @@ const logAnonymousUserIn = async (req: express.Request, res: express.Response) =
 	}
 }
 
-const logUserIn = async (username: string, req: express.Request, res: express.Response) => {
+const logUserIn = async (username: string, password: string, req: express.Request, res: express.Response) => {
 	const user = await User.findOne({ username });
 	if (user) {
-		req.session.user = user;
-		req.session.cookie.expires = new Date(Date.now() + loginSecondsMax * 1000);
-		req.session.save();
-		res.send({
-			"currentUser": user
-		});
+		const passwordIsCorrect = await bcrypt.compare(
+			password,
+			user.hash
+		);
+		if (passwordIsCorrect) {
+			req.session.user = user;
+			req.session.cookie.expires = new Date(Date.now() + loginSecondsMax * 1000);
+			req.session.save();
+			res.send({
+				"currentUser": user
+			});
+		} else {
+			logAnonymousUserIn(req, res);
+		}
 	} else {
 		logAnonymousUserIn(req, res);
 	}
@@ -86,7 +95,8 @@ const logUserIn = async (username: string, req: express.Request, res: express.Re
 
 app.post('/login', (req: express.Request, res: express.Response) => {
 	const username = req.body.username;
-	logUserIn(username, req, res);
+	const password = req.body.password;
+	logUserIn(username, password, req, res);
 });
 
 app.get('/current-user', (req: express.Request, res: express.Response) => {
