@@ -6,6 +6,7 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import { User } from './models/User.js';
+import { createTransport } from 'nodemailer';
 
 dotenv.config();
 mongoose.connect(process.env.MONGODB_URI);
@@ -15,6 +16,16 @@ declare module 'express-session' {
 		user: { [key: string]: any };
 	}
 }
+
+var transporter = createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'gmailAccountName',
+        pass: process.env.PASSWORD,
+    },
+});
+ 
+
 
 const app = express();
 const PORT = process.env.PORT || 3045;
@@ -96,6 +107,33 @@ const logUserIn = async (username: string, password: string, req: express.Reques
 app.post('/login', (req: express.Request, res: express.Response) => {
 	const username = req.body.username;
 	const password = req.body.password;
+	logUserIn(username, password, req, res);
+});
+
+app.post('/register', (req: express.Request, res: express.Response) => {
+	const username = req.body.username;
+	const password = req.body.password;
+	const firstName= req.body.firstName;
+	const lastName = req.body.lastName;
+	const email = req.body.email;
+
+	const user = new User({
+
+	});
+
+
+// var mailOptions = {
+//     from: 'Language Tandem Site <edwardappmailer234@gmail.com>',
+//     to: 'recipient@xyzcompany.com',
+//     subject: 'Please confirm your registration',
+//     html: `
+// <h1>Please confirm your registration</h1>
+// <p>Thank you for signing up with us!</p>
+// <p>Please click here to confirm your registration: https://edwardtanguay.netlify.app/howtos</p>
+// `,
+// };
+
+
 	logUserIn(username, password, req, res);
 });
 
