@@ -62,7 +62,7 @@ app.all('/', function (req, res, next) {
 
 
 app.get('/', (req: express.Request, res: express.Response) => {
-	res.send(`***${process.env.NODE_ENV}***`);
+	res.status(500);
 });
 
 const loginSecondsMax = 10;
