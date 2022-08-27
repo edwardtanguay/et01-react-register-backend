@@ -110,6 +110,7 @@ app.post('/login', (req: express.Request, res: express.Response) => {
 });
 
 app.post('/register', async (req: express.Request, res: express.Response) => {
+	try {
 	const username = req.body.username;
 	const password = req.body.password;
 	const firstName = req.body.firstName;
@@ -183,6 +184,10 @@ app.post('/register', async (req: express.Request, res: express.Response) => {
 		});
 	} else {
 		res.send({ message: 'failed validation', errors });
+	}
+	}
+	catch (e) {
+		res.status(500).send('no access');
 	}
 });
 
