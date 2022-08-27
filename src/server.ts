@@ -65,6 +65,20 @@ app.get('/', (req: express.Request, res: express.Response) => {
 	res.status(500).send('no access');
 });
 
+const ensureSafeOrigin = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+	try {
+		const safeOriginCode = req.body?.safeOriginCode;
+		if (safeOriginCode !== process.env.SAFE_ORIGIN_CODE) {
+			res.status(500).send('no access');
+		} else {
+			next();
+		}
+	}
+	catch (e) {
+		res.status(500).send('no access');
+	}
+}
+
 const loginSecondsMax = 10;
 
 const logAnonymousUserIn = async (req: express.Request, res: express.Response) => {
@@ -103,88 +117,93 @@ const logUserIn = async (username: string, password: string, req: express.Reques
 	}
 }
 
-app.post('/login', (req: express.Request, res: express.Response) => {
-	const username = req.body.username;
-	const password = req.body.password;
-	logUserIn(username, password, req, res);
+app.post('/login', ensureSafeOrigin, (req: express.Request, res: express.Response) => {
+	try {
+		const username = req.body?.username;
+		const password = req.body?.password;
+		logUserIn(username, password, req, res);
+	}
+	catch (e) {
+		res.status(500).send('no access');
+	}
 });
 
-app.post('/register', async (req: express.Request, res: express.Response) => {
+app.post('/register', ensureSafeOrigin, async (req: express.Request, res: express.Response) => {
 	try {
-	const username = req.body.username;
-	const password = req.body.password;
-	const firstName = req.body.firstName;
-	const lastName = req.body.lastName;
-	const email = req.body.email;
-	const confirmationCode = tools.getRandomConfirmationCode();
+		const username = req.body.username;
+		const password = req.body.password;
+		const firstName = req.body.firstName;
+		const lastName = req.body.lastName;
+		const email = req.body.email;
+		const confirmationCode = tools.getRandomConfirmationCode();
 
-	// validation
-	const errors = [];
-	if (username.length < 2) {
-		errors.push('username must be 2 or more characters');
-	}
-	if (password.length < 2) {
-		errors.push('password must be 2 or more characters');
-	}
-	if (firstName.length < 2) {
-		errors.push('first name must be 2 or more characters');
-	}
-	if (lastName.length < 2) {
-		errors.push('last name must be 2 or more characters');
-	}
-	if (!tools.emailIsValid(email)) {
-		errors.push('email must be valid');
-	}
-	if (errors.length === 0) {
-		// generate hash from password
-		const salt = await bcrypt.genSalt();
-		const hash = await bcrypt.hash(password, salt);
+		// validation
+		const errors = [];
+		if (username.length < 2) {
+			errors.push('username must be 2 or more characters');
+		}
+		if (password.length < 2) {
+			errors.push('password must be 2 or more characters');
+		}
+		if (firstName.length < 2) {
+			errors.push('first name must be 2 or more characters');
+		}
+		if (lastName.length < 2) {
+			errors.push('last name must be 2 or more characters');
+		}
+		if (!tools.emailIsValid(email)) {
+			errors.push('email must be valid');
+		}
+		if (errors.length === 0) {
+			// generate hash from password
+			const salt = await bcrypt.genSalt();
+			const hash = await bcrypt.hash(password, salt);
 
-		const user = new User({
-			username,
-			hash,
-			firstName,
-			lastName,
-			accessGroups: ['loggedInUsers', 'unconfirmedMembers'],
-			email,
-			confirmationCode
-		});
+			const user = new User({
+				username,
+				hash,
+				firstName,
+				lastName,
+				accessGroups: ['loggedInUsers', 'unconfirmedMembers'],
+				email,
+				confirmationCode
+			});
 
-		// save user to database
-		// TODO: catch all possible errors in registration process here
-		// TODO: e.g. if user fails to save to database, don't send mail
-		user.save();
+			// save user to database
+			// TODO: catch all possible errors in registration process here
+			// TODO: e.g. if user fails to save to database, don't send mail
+			user.save();
 
-		// send confirmation email to user
-		const confirmUrl = `${ process.env.FRONTEND_BASE_URL }/confirm-registration/${ confirmationCode }`;
-		const mailOptions = {
-			from: `Language Tandem Site <${process.env.MAILER_ACCOUNT_NAME}@gmail.com>`,
-			to: email,
-			subject: 'Please confirm your registration',
-			html: `
+			// send confirmation email to user
+			const confirmUrl = `${process.env.FRONTEND_BASE_URL}/confirm-registration/${confirmationCode}`;
+			const mailOptions = {
+				from: `Language Tandem Site <${process.env.MAILER_ACCOUNT_NAME}@gmail.com>`,
+				to: email,
+				subject: 'Please confirm your registration',
+				html: `
 	<h1>Thank you for your registration!</h1>
 	<p>We appreciate your membership!</p>
 	<p>Please click here to confirm your registration: <a href="${confirmUrl}">${confirmUrl}</a></p>
 	`,
-		};
-		transporter.sendMail(mailOptions, (error, info) => {
-			if (error) {
-				console.log(error);
-			} else {
-				console.log('Email sent: ' + info.response);
-			}
-		});
+			};
+			transporter.sendMail(mailOptions, (error, info) => {
+				if (error) {
+					console.log(error);
+				} else {
+					console.log('Email sent: ' + info.response);
+				}
+			});
 
 
-		res.send({
-			message: 'user created', user: {
-				username, firstName, lastName, email
-			},
-			errors
-		});
-	} else {
-		res.send({ message: 'failed validation', errors });
-	}
+			res.send({
+				message: 'user created', user: {
+					username, firstName, lastName, email
+				},
+				errors
+			});
+		} else {
+			res.send({ message: 'failed validation', errors });
+		}
 	}
 	catch (e) {
 		res.status(500).send('no access');
