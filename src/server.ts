@@ -18,13 +18,13 @@ declare module 'express-session' {
 }
 
 var transporter = createTransport({
-    service: 'gmail',
-    auth: {
-        user: 'gmailAccountName',
-        pass: process.env.PASSWORD,
-    },
+	service: 'gmail',
+	auth: {
+		user: 'gmailAccountName',
+		pass: process.env.PASSWORD,
+	},
 });
- 
+
 
 
 const app = express();
@@ -113,7 +113,7 @@ app.post('/login', (req: express.Request, res: express.Response) => {
 app.post('/register', (req: express.Request, res: express.Response) => {
 	const username = req.body.username;
 	const password = req.body.password;
-	const firstName= req.body.firstName;
+	const firstName = req.body.firstName;
 	const lastName = req.body.lastName;
 	const email = req.body.email;
 
@@ -122,30 +122,32 @@ app.post('/register', (req: express.Request, res: express.Response) => {
 	});
 
 
-// var mailOptions = {
-//     from: 'Language Tandem Site <edwardappmailer234@gmail.com>',
-//     to: 'recipient@xyzcompany.com',
-//     subject: 'Please confirm your registration',
-//     html: `
-// <h1>Please confirm your registration</h1>
-// <p>Thank you for signing up with us!</p>
-// <p>Please click here to confirm your registration: https://edwardtanguay.netlify.app/howtos</p>
-// `,
-// };
+	// var mailOptions = {
+	//     from: 'Language Tandem Site <edwardappmailer234@gmail.com>',
+	//     to: 'recipient@xyzcompany.com',
+	//     subject: 'Please confirm your registration',
+	//     html: `
+	// <h1>Please confirm your registration</h1>
+	// <p>Thank you for signing up with us!</p>
+	// <p>Please click here to confirm your registration: https://edwardtanguay.netlify.app/howtos</p>
+	// `,
+	// };
 
 
 	logUserIn(username, password, req, res);
 });
 
 app.get('/current-user', (req: express.Request, res: express.Response) => {
-	const user = req.session.user;
-	if (user) {
-		res.send({
-			"currentUser": user
-		});
-	} else {
-		logAnonymousUserIn(req, res);
-	}
+	setTimeout(() => {
+		const user = req.session.user;
+		if (user) {
+			res.send({
+				"currentUser": user
+			});
+		} else {
+			logAnonymousUserIn(req, res);
+		}
+	}, 0); // increase to test backend delay 
 });
 
 app.get('/logout', (req: express.Request, res: express.Response) => {
