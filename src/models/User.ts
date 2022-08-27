@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema({
 	lastName: String,
 	accessGroups: [String],
 	email: String,
-	confirmCode: String
+	confirmationCode: String
 });
 
 export const User = mongoose.model('user', userSchema);

@@ -7,6 +7,7 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import { User } from './models/User.js';
 import { createTransport } from 'nodemailer';
+import * as tools from './tools.js';
 
 dotenv.config();
 mongoose.connect(process.env.MONGODB_URI);
@@ -17,15 +18,13 @@ declare module 'express-session' {
 	}
 }
 
-var transporter = createTransport({
+const transporter = createTransport({
 	service: 'gmail',
 	auth: {
-		user: 'gmailAccountName',
-		pass: process.env.PASSWORD,
+		user: process.env.MAILER_ACCOUNT_NAME,
+		pass: process.env.MAILER_ACCOUNT_PASSWORD,
 	},
 });
-
-
 
 const app = express();
 const PORT = process.env.PORT || 3045;
@@ -110,31 +109,81 @@ app.post('/login', (req: express.Request, res: express.Response) => {
 	logUserIn(username, password, req, res);
 });
 
-app.post('/register', (req: express.Request, res: express.Response) => {
+app.post('/register', async (req: express.Request, res: express.Response) => {
 	const username = req.body.username;
 	const password = req.body.password;
 	const firstName = req.body.firstName;
 	const lastName = req.body.lastName;
 	const email = req.body.email;
+	const confirmationCode = tools.getRandomConfirmationCode();
 
-	const user = new User({
+	// validation
+	const errors = [];
+	if (username.length < 2) {
+		errors.push('username must be 2 or more characters');
+	}
+	if (password.length < 2) {
+		errors.push('password must be 2 or more characters');
+	}
+	if (firstName.length < 2) {
+		errors.push('first name must be 2 or more characters');
+	}
+	if (lastName.length < 2) {
+		errors.push('last name must be 2 or more characters');
+	}
+	if (!tools.emailIsValid(email)) {
+		errors.push('email must be valid');
+	}
+	if (errors.length === 0) {
+		// generate hash from password
+		const salt = await bcrypt.genSalt();
+		const hash = await bcrypt.hash(password, salt);
 
-	});
+		const user = new User({
+			username,
+			hash,
+			firstName,
+			lastName,
+			accessGroups: ['loggedInUsers', 'unconfirmedMembers'],
+			email,
+			confirmationCode
+		});
+
+		// save user to database
+		// TODO: catch all possible errors in registration process here
+		// TODO: e.g. if user fails to save to database, don't send mail
+		user.save();
+
+		// send confirmation email to user
+		const confirmUrl = `${ process.env.FRONTEND_BASE_URL }/confirm-registration/${ confirmationCode }`;
+		const mailOptions = {
+			from: `Language Tandem Site <${process.env.MAILER_ACCOUNT_NAME}@gmail.com>`,
+			to: email,
+			subject: 'Please confirm your registration',
+			html: `
+	<h1>Thank you for your registration!</h1>
+	<p>We appreciate your membership!</p>
+	<p>Please click here to confirm your registration: <a href="${confirmUrl}">${confirmUrl}</a></p>
+	`,
+		};
+		transporter.sendMail(mailOptions, (error, info) => {
+			if (error) {
+				console.log(error);
+			} else {
+				console.log('Email sent: ' + info.response);
+			}
+		});
 
 
-	// var mailOptions = {
-	//     from: 'Language Tandem Site <edwardappmailer234@gmail.com>',
-	//     to: 'recipient@xyzcompany.com',
-	//     subject: 'Please confirm your registration',
-	//     html: `
-	// <h1>Please confirm your registration</h1>
-	// <p>Thank you for signing up with us!</p>
-	// <p>Please click here to confirm your registration: https://edwardtanguay.netlify.app/howtos</p>
-	// `,
-	// };
-
-
-	logUserIn(username, password, req, res);
+		res.send({
+			message: 'user created', user: {
+				username, firstName, lastName, email
+			},
+			errors
+		});
+	} else {
+		res.send({ message: 'failed validation', errors });
+	}
 });
 
 app.get('/current-user', (req: express.Request, res: express.Response) => {
@@ -147,11 +196,26 @@ app.get('/current-user', (req: express.Request, res: express.Response) => {
 		} else {
 			logAnonymousUserIn(req, res);
 		}
-	}, 0); // increase to test backend delay 
+	}, 0); // increase to test initial backend delay 
 });
 
 app.get('/logout', (req: express.Request, res: express.Response) => {
 	logAnonymousUserIn(req, res);
+});
+
+app.post('/confirm-registration-code', async (req: express.Request, res: express.Response) => {
+	const confirmationCode = req.body.confirmationCode;
+	const user = await User.findOne({ confirmationCode });
+	if (user) {
+		user.accessGroups = ['loggedInUsers', 'members'];
+		user.save();
+		req.session.user = user;
+		req.session.cookie.expires = new Date(Date.now() + loginSecondsMax * 1000);
+		req.session.save();
+		res.send({ userWasConfirmed: true })
+	} else {
+		res.send({ userWasConfirmed: false })
+	}
 });
 
 app.listen(PORT, () => {
